@@ -1,17 +1,17 @@
-import Head from "next/head";
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
-import styles from "@/styles/Home.module.css";
+import Head from 'next/head'
+import Image from 'next/image'
+import { Geist, Geist_Mono } from 'next/font/google'
+import styles from '@/styles/Home.module.css'
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-sans',
+  subsets: ['latin']
+})
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-mono',
+  subsets: ['latin']
+})
 
 export default function Home() {
   return (
@@ -22,9 +22,7 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div
-        className={`${styles.page} ${geistSans.variable} ${geistMono.variable}`}
-      >
+      <div className={`${styles.page} ${geistSans.variable} ${geistMono.variable}`}>
         <main className={styles.main}>
           <Image
             className={styles.logo}
@@ -36,26 +34,25 @@ export default function Home() {
           />
           <div className={styles.intro}>
             <h1>
-              To get started, edit the{" "}
-              <code className={styles.code}>index.tsx</code> file.
+              To get started, edit the <code className={styles.code}>index.tsx</code> file.
             </h1>
             <p>
-              Looking for a starting point or more instructions? Head over to{" "}
+              Looking for a starting point or more instructions? Head over to{' '}
               <a
                 href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 Templates
-              </a>{" "}
-              or the{" "}
+              </a>{' '}
+              or the{' '}
               <a
                 href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 Learning
-              </a>{" "}
+              </a>{' '}
               center.
             </p>
           </div>
@@ -87,5 +84,5 @@ export default function Home() {
         </main>
       </div>
     </>
-  );
+  )
 }
