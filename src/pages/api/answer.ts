@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { postAnswer } from '@/services/answer'
 
 type AnswerItem = {
   componentId: string
@@ -29,24 +30,29 @@ function genAnswerInfo(reqBody: ReqBody): AnswerInfo {
   }
 }
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     // 不是 post 则返回错误
     res.status(200).json({ errno: -1, msg: 'Method 错误' })
+    return
   }
 
+  // 获取并格式化表单数据
   const answerInfo = genAnswerInfo(req.body)
 
   try {
     // 提交到服务端 Mock
+    const resData = await postAnswer(answerInfo)
 
-    // // 如果提交成功了
-    // res.redirect('/success')
-
-    // 如果提交失败了
+    if (resData.errno === 0) {
+      // 如果提交成功了
+      res.redirect('/success')
+    } else {
+      // 提交失败了
+      res.redirect('/fail')
+    }
+  } catch {
     res.redirect('/fail')
-  } catch (err) {
-    
   }
 
   // res.status(200).json({ errno: 0 })
