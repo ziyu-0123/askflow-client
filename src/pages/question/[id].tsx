@@ -5,6 +5,9 @@ type PropsType = {
   id: string
 }
 
+// 临时引用
+import QuestionInput from '@/components/QuestionComponents/QuestionInput'
+
 export default function Question(props: PropsType) {
   return <>
     <Head>
@@ -16,6 +19,10 @@ export default function Question(props: PropsType) {
     <main>
       <h1>Question page</h1>
       <p>{props.id}</p>
+
+      <form>
+        <QuestionInput fe_id="c1" props={{ title: '你的姓名', placeholder: '请输入姓名' }}/>
+      </form>
     </main>
   </>
 }
