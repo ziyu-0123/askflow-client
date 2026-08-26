@@ -2,6 +2,7 @@ import PageWrapper from '@/components/QuestionComponents/PageWrapper'
 import type { GetServerSidePropsContext } from 'next'
 import styles from '@/styles/Question.module.scss'
 import { getQuestionById } from '@/services/question'
+import { getComponent } from '@/components/QuestionComponents'
 
 type ComponentInfo = {
   fe_id: string
@@ -27,10 +28,6 @@ type PropsType = {
   }
   msg?: string
 }
-
-// 临时引用
-import QuestionInput from '@/components/QuestionComponents/QuestionInput'
-import QuestionRadio from '@/components/QuestionComponents/QuestionRadio'
 
 export default function Question(props: PropsType) {
   const { errno, data, msg = '' } = props
@@ -67,27 +64,26 @@ export default function Question(props: PropsType) {
     )
   }
 
+  // 遍历组件
+  const ComponentListElem = (
+    <>
+      {componentList.map((c) => {
+        const ComponentElem = getComponent(c)
+        return (
+          <div key={c.fe_id} className={styles.componentWrapper}>
+            {ComponentElem}
+          </div>
+        )
+      })}
+    </>
+  )
+
   return (
     <PageWrapper title={title} desc={desc}>
       <form method="post" action="/api/answer">
         <input type="hidden" name="questionId" value={id} />
-        <div className={styles.componentWrapper}>
-          <QuestionInput fe_id="c1" props={{ title: '你的姓名', placeholder: '请输入姓名' }} />
-        </div>
-        <div className={styles.componentWrapper}>
-          <QuestionRadio
-            fe_id="c2"
-            props={{
-              title: '你的性别',
-              options: [
-                { value: 'male', text: '男' },
-                { value: 'female', text: '女' }
-              ],
-              value: 'male',
-              isVertical: false
-            }}
-          />
-        </div>
+        {ComponentListElem}
+
         <div className={styles.submitBtnContainer}>
           {/* <input type="submit" value="提交" /> */}
           <button type="submit">提交</button>
@@ -103,7 +99,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   // 根据 id await 获取问卷数据
   const data = await getQuestionById(id)
 
+  // 把 API 响应展开，让 props 直接拿到 errno / data / msg
   return {
-    props: { data }
+    props: { ...data }
   }
 }
