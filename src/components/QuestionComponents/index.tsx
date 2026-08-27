@@ -3,6 +3,8 @@ import QuestionRadio from './QuestionRadio'
 import QuestionTitle from './QuestionTitle'
 import QuestionParagraph from './QuestionParagraph'
 import QuestionInfo from './QuestionInfo'
+import QuestionTextarea from './QuestionTextarea'
+import QuestionCheckbox from './QuestionCheckbox'
 
 type ComponentInfoType = {
   fe_id: string
@@ -47,6 +49,29 @@ export const getComponent = (comp: ComponentInfoType) => {
 
   if (type === 'questionInfo') {
     return <QuestionInfo {...(props as { title: string; desc?: string })} />
+  }
+
+  if (type === 'questionTextarea') {
+    return <QuestionTextarea fe_id={fe_id} props={props as { title: string; placeholder?: string }} />
+  }
+
+  if (type === 'questionCheckbox') {
+    return (
+      <QuestionCheckbox
+        fe_id={fe_id}
+        props={
+          props as {
+            title: string
+            isVertical?: boolean
+            list: Array<{
+              value: string
+              text: string
+              checked: boolean
+            }>
+          }
+        }
+      />
+    )
   }
 
   return null
