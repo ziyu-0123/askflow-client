@@ -1,4 +1,5 @@
-const HOST = 'http://localhost:3001' // Mock 的 host
+// const HOST = 'http://localhost:3001' // Mock 的 host
+const HOST = 'http://localhost:3005'
 
 type ResData = {
   errno: number
@@ -15,6 +16,9 @@ export async function get<T = ResData>(url: string): Promise<T> {
 export async function post<T = ResData>(url: string, body: unknown): Promise<T> {
   const res = await fetch(`${HOST}${url}`, {
     method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify(body)
   })
   const data = await res.json()

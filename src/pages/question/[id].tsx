@@ -17,7 +17,7 @@ type ComponentInfo = {
 type PropsType = {
   errno: number
   data?: {
-    id: string
+    _id: string
     title: string
     desc?: string
     js?: string
@@ -42,7 +42,7 @@ export default function Question(props: PropsType) {
     )
   }
 
-  const { id, title = '', desc = '', isDeleted, isPublished, componentList = [] } = data || {}
+  const { _id: id, title = '', desc = '', isDeleted, isPublished, componentList = [] } = data || {}
 
   // 已经被删除的，提示错误
   if (isDeleted) {
