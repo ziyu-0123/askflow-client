@@ -2,6 +2,24 @@
   border-bottom: 1px solid #f1f1f1;
 }
 
+// 语言链接行（中文 | English | 日本語 ...，当前语言高亮）
+.langRow {
+  text-align: center;
+  padding: 8px 0;
+  font-size: 14px;
+
+  a {
+    color: #1677ff;
+    margin: 0 6px;
+  }
+
+  .langActive {
+    color: #1677ff;
+    font-weight: bold;
+    margin: 0 6px;
+  }
+}
+
 .submitBtnContainer {
   text-align: center;
   margin: 16px;
