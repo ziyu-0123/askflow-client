@@ -3,6 +3,7 @@ import type { GetServerSidePropsContext } from 'next'
 import styles from '@/styles/Question.module.scss'
 import { getQuestionById } from '@/services/question'
 import { getComponent } from '@/components/QuestionComponents'
+import InterviewChat from '@/components/InterviewChat'
 
 type ComponentInfo = {
   fe_id: string
@@ -38,6 +39,7 @@ type QuestionData = {
   css?: string
   isPublished: boolean
   isDeleted: boolean
+  type?: 'survey' | 'interview'
   componentList?: ComponentInfo[]
   translations?: { [lang: string]: QuestionTranslation }
 }
@@ -191,6 +193,15 @@ export default function Question(props: PropsType) {
       <PageWrapper title={title} desc={desc}>
         <h1>{title}</h1>
         <p>该问卷尚未发布</p>
+      </PageWrapper>
+    )
+  }
+
+  // 访谈问卷走聊天式 UI
+  if (data?.type === 'interview') {
+    return (
+      <PageWrapper title={title} desc={desc}>
+        <InterviewChat questionId={id!} />
       </PageWrapper>
     )
   }

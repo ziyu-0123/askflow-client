@@ -1,5 +1,5 @@
 // const HOST = 'http://localhost:3001' // Mock 的 host
-const HOST = 'http://localhost:3005'
+export const HOST = 'http://localhost:3005'
 
 type ResData = {
   errno: number
