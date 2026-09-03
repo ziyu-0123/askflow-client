@@ -85,3 +85,30 @@
   text-align: center;
   padding: 8px;
 }
+
+.actions {
+  display: flex;
+  justify-content: center;
+  padding: 8px 12px 12px;
+}
+
+.finishBtn {
+  padding: 8px 24px;
+  border: 1px solid #1677ff;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #1677ff;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.finished {
+  padding: 16px;
+  text-align: center;
+  color: #52c41a;
+  font-size: 15px;
+}

@@ -5,9 +5,15 @@ type AnswerItem = {
   value: string
 }
 
+export type ConversationItem = {
+  role: 'interviewer' | 'interviewee'
+  content: string
+}
+
 type AnswerInfo = {
   questionId: string
-  answerList: AnswerItem[]
+  answerList?: AnswerItem[]
+  conversationList?: ConversationItem[]
 }
 
 type ResData = {
@@ -15,7 +21,7 @@ type ResData = {
   msg?: string
 }
 
-// 提交答卷
+// 提交答卷（问卷答卷用 answerList，访谈答卷用 conversationList）
 export async function postAnswer(answerInfo: AnswerInfo): Promise<ResData> {
   const url = '/api/answer'
   const data = await post<ResData>(url, answerInfo)

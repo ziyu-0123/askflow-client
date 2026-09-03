@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, type FormEvent } from 'react'
 import { postInterviewStream, type InterviewMessage } from '@/services/interview'
+import { postAnswer } from '@/services/answer'
 import styles from '@/styles/Interview.module.scss'
 
 type Props = {
@@ -12,6 +13,8 @@ export default function InterviewChat({ questionId }: Props) {
   const [streaming, setStreaming] = useState(false)
   const [streamingReply, setStreamingReply] = useState('')
   const [error, setError] = useState('')
+  const [finished, setFinished] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const startedRef = useRef(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -59,6 +62,24 @@ export default function InterviewChat({ questionId }: Props) {
     startRound(next)
   }
 
+  async function handleFinish() {
+    if (finished || submitting || messages.length === 0) return
+    setSubmitting(true)
+    setError('')
+    try {
+      const res = await postAnswer({ questionId, conversationList: messages })
+      if (res.errno === 0) {
+        setFinished(true)
+      } else {
+        setError(res.msg || '提交失败')
+      }
+    } catch {
+      setError('提交失败，请重试')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className={styles.chat}>
       <div className={styles.messages}>
@@ -78,17 +99,32 @@ export default function InterviewChat({ questionId }: Props) {
         {error && <div className={styles.error}>{error}</div>}
         <div ref={bottomRef} />
       </div>
-      <form className={styles.inputBar} onSubmit={handleSend}>
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="输入你的回答..."
-          disabled={streaming}
-        />
-        <button type="submit" disabled={streaming || !input.trim()}>
-          发送
-        </button>
-      </form>
+      {finished ? (
+        <div className={styles.finished}>感谢参与，本次访谈已结束</div>
+      ) : (
+        <>
+          <form className={styles.inputBar} onSubmit={handleSend}>
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="输入你的回答..."
+              disabled={streaming}
+            />
+            <button type="submit" disabled={streaming || !input.trim()}>
+              发送
+            </button>
+          </form>
+          <div className={styles.actions}>
+            <button
+              className={styles.finishBtn}
+              onClick={handleFinish}
+              disabled={submitting || messages.length === 0}
+            >
+              {submitting ? '提交中...' : '结束访谈'}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   )
 }
