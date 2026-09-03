@@ -1,7 +1,8 @@
 .chat {
   display: flex;
   flex-direction: column;
-  height: 80vh;
+  height: 100vh;
+  height: 100dvh; // 移动端动态视口（地址栏收起/展开时自适应）
 }
 
 .messages {

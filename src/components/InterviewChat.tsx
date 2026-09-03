@@ -15,6 +15,7 @@ export default function InterviewChat({ questionId }: Props) {
   const [error, setError] = useState('')
   const [finished, setFinished] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [canFinish, setCanFinish] = useState(false)
   const startedRef = useRef(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -24,12 +25,16 @@ export default function InterviewChat({ questionId }: Props) {
     setStreamingReply('')
     let reply = ''
     try {
-      await postInterviewStream(questionId, history, (text) => {
+      const roundFinished = await postInterviewStream(questionId, history, (text) => {
         reply += text
         setStreamingReply(reply)
       })
       if (reply) {
         setMessages((prev) => [...prev, { role: 'interviewer', content: reply }])
+      }
+      // AI 提纲问完并收尾后，才允许填写人结束访谈
+      if (roundFinished) {
+        setCanFinish(true)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '请求失败')
@@ -118,7 +123,7 @@ export default function InterviewChat({ questionId }: Props) {
             <button
               className={styles.finishBtn}
               onClick={handleFinish}
-              disabled={submitting || messages.length === 0}
+              disabled={submitting || messages.length === 0 || !canFinish}
             >
               {submitting ? '提交中...' : '结束访谈'}
             </button>

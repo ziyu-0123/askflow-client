@@ -7,11 +7,12 @@ export type InterviewMessage = {
 }
 
 // 流式调用访谈接口，逐块回调增量文本（SSE：data: <增量>\n\n，结束 data: [DONE]）
+// 返回是否收到访谈结束信号（event: finished）
 export async function postInterviewStream(
   questionId: string,
   history: InterviewMessage[],
   onDelta: (text: string) => void
-): Promise<void> {
+): Promise<boolean> {
   const res = await fetch(`${HOST}/api/ai/interview/stream`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -27,6 +28,7 @@ export async function postInterviewStream(
   const reader = res.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
+  let finished = false
 
   while (true) {
     const { done, value } = await reader.read()
@@ -43,6 +45,11 @@ export async function postInterviewStream(
       const eventLine = lines.find((l) => l.startsWith('event:'))
       const dataLine = lines.find((l) => l.startsWith('data:'))
 
+      // 访谈结束信号（提纲问完收尾）
+      if (eventLine?.trim() === 'event: finished') {
+        finished = true
+        continue
+      }
       // 流式过程中的错误（如 Key 失效），以 error 事件返回
       if (eventLine?.trim() === 'event: error') {
         throw new Error(dataLine ? safeParse(dataLine.slice(5).trim()) : 'AI 请求失败')
@@ -50,11 +57,13 @@ export async function postInterviewStream(
       if (!dataLine) continue
 
       const data = dataLine.slice(5).trim()
-      if (data === '[DONE]') return
+      if (data === '[DONE]') return finished
       const text = safeParse(data)
       if (text) onDelta(text)
     }
   }
+
+  return finished
 }
 
 // 解析 SSE data 的 JSON 字符串，失败返回空串
