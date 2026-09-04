@@ -16,6 +16,7 @@ export default function InterviewChat({ questionId }: Props) {
   const [finished, setFinished] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [canFinish, setCanFinish] = useState(false)
+  const [retryable, setRetryable] = useState(false)
   const startedRef = useRef(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
@@ -25,6 +26,7 @@ export default function InterviewChat({ questionId }: Props) {
   async function startRound(history: InterviewMessage[]) {
     setStreaming(true)
     setError('')
+    setRetryable(false)
     setStreamingReply('')
     let reply = ''
     // 每轮创建独立的中止控制器，组件卸载时中断进行中的流
@@ -59,6 +61,8 @@ export default function InterviewChat({ questionId }: Props) {
       // 用户离开页面触发的中止，无需提示
       if (err instanceof Error && err.name === 'AbortError') return
       setError(err instanceof Error ? err.message : '请求失败')
+      // 网络错误（TypeError）可重试；业务错误（普通 Error）不可重试
+      setRetryable(err instanceof TypeError)
     } finally {
       abortRef.current = null
       setStreaming(false)
@@ -94,6 +98,12 @@ export default function InterviewChat({ questionId }: Props) {
     setMessages(next)
     setInput('')
     startRound(next)
+  }
+
+  // 网络中断后重试当前轮：基于当前 messages（含本轮用户消息）重新发起
+  function handleRetry() {
+    if (streaming || messages.length === 0) return
+    startRound(messages)
   }
 
   async function handleFinish() {
@@ -134,7 +144,19 @@ export default function InterviewChat({ questionId }: Props) {
             </div>
           </div>
         )}
-        {error && <div className={styles.error}>{error}</div>}
+        {error && (
+          <div className={styles.error}>
+            {error}
+            {retryable && !streaming && (
+              <button
+                onClick={handleRetry}
+                style={{ marginLeft: 8, cursor: 'pointer' }}
+              >
+                重试
+              </button>
+            )}
+          </div>
+        )}
         <div ref={bottomRef} />
       </div>
       {finished ? (

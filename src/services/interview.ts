@@ -21,12 +21,16 @@ export async function postInterviewStream(
   onDelta: (text: string) => void,
   signal?: AbortSignal
 ): Promise<{ finished: boolean; usage?: InterviewUsage }> {
-  const res = await fetch(`${HOST}/api/ai/interview/stream`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ questionId, history }),
-    signal,
-  })
+  const res = await fetchWithRetry(
+    `${HOST}/api/ai/interview/stream`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ questionId, history }),
+      signal,
+    },
+    2
+  )
 
   if (!res.ok || !res.body) {
     // 非流式错误（校验失败）：解析后端 JSON 错误信息
@@ -106,4 +110,25 @@ function parseUsage(raw: string): InterviewUsage | undefined {
   } catch {
     return undefined
   }
+}
+
+// 带网络错误重试的 fetch：仅对网络层错误（断网/连接失败）重试，AbortError 不重试
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  retries: number
+): Promise<Response> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fetch(url, init)
+    } catch (err) {
+      // 用户主动中断（组件卸载）不重试
+      if (err instanceof Error && err.name === 'AbortError') throw err
+      // 最后一次尝试仍失败则抛出
+      if (attempt === retries) throw err
+      // 指数退避 1s / 2s / 4s
+      await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** attempt))
+    }
+  }
+  throw new Error('请求失败')
 }
