@@ -1,5 +1,5 @@
-// const HOST = 'http://localhost:3001' // Mock 的 host
-export const HOST = 'http://localhost:3005'
+// 后端地址：部署时用 NEXT_PUBLIC_API_BASE 配置，本地默认 localhost:3005
+export const HOST = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3005'
 
 type ResData = {
   errno: number
