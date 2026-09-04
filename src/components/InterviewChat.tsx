@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type FormEvent } from 'react'
-import { postInterviewStream, type InterviewMessage } from '@/services/interview'
+import { postInterviewStream, type InterviewMessage, type InterviewUsage } from '@/services/interview'
 import { postAnswer } from '@/services/answer'
 import styles from '@/styles/Interview.module.scss'
 
@@ -19,6 +19,8 @@ export default function InterviewChat({ questionId }: Props) {
   const startedRef = useRef(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
+  // 累积本次访谈的总 token 用量，提交答卷时随 conversationList 持久化
+  const usageRef = useRef<InterviewUsage>({ prompt: 0, completion: 0, total: 0 })
 
   async function startRound(history: InterviewMessage[]) {
     setStreaming(true)
@@ -29,7 +31,7 @@ export default function InterviewChat({ questionId }: Props) {
     const controller = new AbortController()
     abortRef.current = controller
     try {
-      const roundFinished = await postInterviewStream(
+      const { finished: roundFinished, usage } = await postInterviewStream(
         questionId,
         history,
         (text) => {
@@ -38,6 +40,14 @@ export default function InterviewChat({ questionId }: Props) {
         },
         controller.signal
       )
+      // 累积该轮 token 用量
+      if (usage) {
+        usageRef.current = {
+          prompt: usageRef.current.prompt + usage.prompt,
+          completion: usageRef.current.completion + usage.completion,
+          total: usageRef.current.total + usage.total,
+        }
+      }
       if (reply) {
         setMessages((prev) => [...prev, { role: 'interviewer', content: reply }])
       }
@@ -91,7 +101,11 @@ export default function InterviewChat({ questionId }: Props) {
     setSubmitting(true)
     setError('')
     try {
-      const res = await postAnswer({ questionId, conversationList: messages })
+      const res = await postAnswer({
+        questionId,
+        conversationList: messages,
+        usage: usageRef.current,
+      })
       if (res.errno === 0) {
         setFinished(true)
       } else {

@@ -14,6 +14,7 @@ type AnswerInfo = {
   questionId: string
   answerList?: AnswerItem[]
   conversationList?: ConversationItem[]
+  usage?: { prompt: number; completion: number; total: number }
 }
 
 type ResData = {

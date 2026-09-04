@@ -6,14 +6,21 @@ export type InterviewMessage = {
   content: string
 }
 
+// 单轮 token 用量（camelCase，与后端 event: usage 一致）
+export type InterviewUsage = {
+  prompt: number
+  completion: number
+  total: number
+}
+
 // 流式调用访谈接口，逐块回调增量文本（SSE：data: <增量>\n\n，结束 data: [DONE]）
-// 返回是否收到访谈结束信号（event: finished）
+// 返回 { finished（是否收到访谈结束信号）, usage（该轮 token 用量） }
 export async function postInterviewStream(
   questionId: string,
   history: InterviewMessage[],
   onDelta: (text: string) => void,
   signal?: AbortSignal
-): Promise<boolean> {
+): Promise<{ finished: boolean; usage?: InterviewUsage }> {
   const res = await fetch(`${HOST}/api/ai/interview/stream`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -31,6 +38,7 @@ export async function postInterviewStream(
   const decoder = new TextDecoder()
   let buffer = ''
   let finished = false
+  let usage: InterviewUsage | undefined
 
   while (true) {
     const { done, value } = await reader.read()
@@ -52,6 +60,11 @@ export async function postInterviewStream(
         finished = true
         continue
       }
+      // 单轮 token 用量（后端流结束时返回，用于前端累积）
+      if (eventLine?.trim() === 'event: usage') {
+        usage = dataLine ? parseUsage(dataLine.slice(5).trim()) : undefined
+        continue
+      }
       // 流式过程中的错误（如 Key 失效），以 error 事件返回
       if (eventLine?.trim() === 'event: error') {
         throw new Error(dataLine ? safeParse(dataLine.slice(5).trim()) : 'AI 请求失败')
@@ -59,13 +72,13 @@ export async function postInterviewStream(
       if (!dataLine) continue
 
       const data = dataLine.slice(5).trim()
-      if (data === '[DONE]') return finished
+      if (data === '[DONE]') return { finished, usage }
       const text = safeParse(data)
       if (text) onDelta(text)
     }
   }
 
-  return finished
+  return { finished, usage }
 }
 
 // 解析 SSE data 的 JSON 字符串，失败返回空串
@@ -75,5 +88,22 @@ function safeParse(raw: string): string {
     return typeof parsed === 'string' ? parsed : ''
   } catch {
     return ''
+  }
+}
+
+// 解析 usage 事件的 JSON 对象，失败返回 undefined
+function parseUsage(raw: string): InterviewUsage | undefined {
+  try {
+    const parsed = JSON.parse(raw)
+    if (
+      typeof parsed.prompt === 'number' &&
+      typeof parsed.completion === 'number' &&
+      typeof parsed.total === 'number'
+    ) {
+      return { prompt: parsed.prompt, completion: parsed.completion, total: parsed.total }
+    }
+    return undefined
+  } catch {
+    return undefined
   }
 }
