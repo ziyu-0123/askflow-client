@@ -2,6 +2,11 @@
   border-bottom: 1px solid #f1f1f1;
 }
 
+// 传统问卷表单：统一左右/上下内边距，避免内容贴边
+.form {
+  padding: 12px 16px;
+}
+
 // 语言链接行（中文 | English | 日本語 ...，当前语言高亮）
 .langRow {
   text-align: center;

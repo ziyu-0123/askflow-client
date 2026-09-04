@@ -247,7 +247,7 @@ export default function Question(props: PropsType) {
   return (
     <PageWrapper title={title} desc={desc}>
       {LangRowElem}
-      <form method="post" action="/api/answer">
+      <form method="post" action="/api/answer" className={styles.form}>
         <input type="hidden" name="questionId" value={id} />
         {ComponentListElem}
 
