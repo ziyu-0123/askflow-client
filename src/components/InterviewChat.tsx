@@ -18,17 +18,26 @@ export default function InterviewChat({ questionId }: Props) {
   const [canFinish, setCanFinish] = useState(false)
   const startedRef = useRef(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
   async function startRound(history: InterviewMessage[]) {
     setStreaming(true)
     setError('')
     setStreamingReply('')
     let reply = ''
+    // 每轮创建独立的中止控制器，组件卸载时中断进行中的流
+    const controller = new AbortController()
+    abortRef.current = controller
     try {
-      const roundFinished = await postInterviewStream(questionId, history, (text) => {
-        reply += text
-        setStreamingReply(reply)
-      })
+      const roundFinished = await postInterviewStream(
+        questionId,
+        history,
+        (text) => {
+          reply += text
+          setStreamingReply(reply)
+        },
+        controller.signal
+      )
       if (reply) {
         setMessages((prev) => [...prev, { role: 'interviewer', content: reply }])
       }
@@ -37,8 +46,11 @@ export default function InterviewChat({ questionId }: Props) {
         setCanFinish(true)
       }
     } catch (err) {
+      // 用户离开页面触发的中止，无需提示
+      if (err instanceof Error && err.name === 'AbortError') return
       setError(err instanceof Error ? err.message : '请求失败')
     } finally {
+      abortRef.current = null
       setStreaming(false)
       setStreamingReply('')
     }
@@ -50,6 +62,13 @@ export default function InterviewChat({ questionId }: Props) {
     startedRef.current = true
     startRound([])
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // 组件卸载时中止进行中的流式请求
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort()
+    }
   }, [])
 
   // 新消息时滚动到底部

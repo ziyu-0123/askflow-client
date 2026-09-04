@@ -11,12 +11,14 @@ export type InterviewMessage = {
 export async function postInterviewStream(
   questionId: string,
   history: InterviewMessage[],
-  onDelta: (text: string) => void
+  onDelta: (text: string) => void,
+  signal?: AbortSignal
 ): Promise<boolean> {
   const res = await fetch(`${HOST}/api/ai/interview/stream`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ questionId, history }),
+    signal,
   })
 
   if (!res.ok || !res.body) {
